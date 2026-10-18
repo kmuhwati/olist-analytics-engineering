@@ -1,0 +1,19 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      OLIST_RAW_DIR: ${{ github.workspace }}/data/raw
+      OLIST_DUCKDB_PATH: ${{ github.workspace }}/data/warehouse/olist.duckdb
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python scripts/download_data.py
+      - name: dbt build (models + 43 data tests)
+        run: mkdir -p data/warehouse && cd dbt && dbt build --profiles-dir . --project-dir .
+      - run: pytest -q

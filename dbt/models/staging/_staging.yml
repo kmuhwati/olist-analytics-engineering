@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: stg_olist__orders
+    description: One row per order with typed timestamps.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_olist__customers'), field: customer_id}
+      - name: order_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: [delivered, shipped, canceled, unavailable, invoiced, processing, created, approved]
+    tests:
+      - expression_is_true:
+          arguments:
+            expression: "delivered_at is null or delivered_at >= purchased_at"
+
+  - name: stg_olist__order_items
+    tests:
+      - expression_is_true:
+          arguments: {expression: "price > 0 and freight_value >= 0"}
+    columns:
+      - name: order_id
+        tests:
+          - relationships:
+              arguments: {to: ref('stg_olist__orders'), field: order_id}
+      - name: seller_id
+        tests:
+          - relationships:
+              arguments: {to: ref('stg_olist__sellers'), field: seller_id}
+      - name: product_id
+        tests:
+          - relationships:
+              arguments: {to: ref('stg_olist__products'), field: product_id}
+
+  - name: stg_olist__payments
+    columns:
+      - name: payment_type
+        tests:
+          - accepted_values:
+              arguments: {values: [credit_card, boleto, voucher, debit_card, not_defined]}
+
+  - name: stg_olist__reviews
+    description: Latest review per order (raw file has duplicates).
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: review_score
+        tests:
+          - accepted_values:
+              arguments: {values: [1, 2, 3, 4, 5], quote: false}
+
+  - name: stg_olist__customers
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+
+  - name: stg_olist__sellers
+    columns:
+      - name: seller_id
+        tests: [unique, not_null]
+
+  - name: stg_olist__products
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+
+  - name: stg_olist__zip_centroids
+    columns:
+      - name: zip_prefix
+        tests: [unique, not_null]

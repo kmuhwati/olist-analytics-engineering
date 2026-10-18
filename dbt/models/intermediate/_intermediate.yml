@@ -1,0 +1,15 @@
+version: 2
+models:
+  - name: int_orders__items
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+  - name: int_orders__payments
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+  - name: int_orders__delivery
+    description: "is_late uses a one-day grace period because estimated dates are midnight timestamps."
+    columns:
+      - name: order_id
+        tests: [unique, not_null]

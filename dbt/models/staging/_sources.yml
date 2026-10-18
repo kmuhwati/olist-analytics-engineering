@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: olist
+    description: Raw CSV exports of the Olist Brazilian e-commerce marketplace (2016-2018), read in place by DuckDB.
+    meta:
+      external_location: "read_csv('{{ env_var('OLIST_RAW_DIR') }}/{name}.csv', header = true, auto_detect = true)"
+    tables:
+      - name: olist_orders_dataset
+      - name: olist_order_items_dataset
+      - name: olist_order_payments_dataset
+      - name: olist_order_reviews_dataset
+      - name: olist_customers_dataset
+      - name: olist_sellers_dataset
+      - name: olist_products_dataset
+      - name: olist_geolocation_dataset
+      - name: product_category_name_translation

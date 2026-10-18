@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: One row per order joining items, payments, delivery timing, review and geography.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_unique_id
+        tests: [not_null]
+      - name: review_score
+        tests:
+          - accepted_values:
+              arguments: {values: [1, 2, 3, 4, 5], quote: false}
+    tests:
+      - expression_is_true:
+          arguments:
+            expression: "distance_km is null or distance_km between 0 and 5000"
+      # Payments should cover items + freight; vouchers and rounding make a small share differ.
+      - row_share_below:
+          arguments:
+            condition: "payment_value is not null and gmv is not null and abs(payment_value - gmv) > 1"
+            max_share: 0.02
+      # Delivered orders must carry a delivery timestamp; the raw data has a handful that do not.
+      - row_share_below:
+          arguments:
+            condition: "order_status = 'delivered' and delivered_at is null"
+            max_share: 0.001
+
+  - name: dim_customers
+    description: One row per real customer; Olist issues a fresh customer_id for every order.
+    columns:
+      - name: customer_unique_id
+        tests: [unique, not_null]
+    tests:
+      - expression_is_true:
+          arguments: {expression: "n_orders >= 1"}
+
+  - name: dim_sellers
+    columns:
+      - name: seller_id
+        tests: [unique, not_null]
+
+  - name: mart_cohort_retention
+    tests:
+      - expression_is_true:
+          arguments: {expression: "retention between 0 and 1"}
+
+  - name: mart_seller_scorecard
+    columns:
+      - name: seller_id
+        tests: [unique, not_null]
